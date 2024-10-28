@@ -1,3 +1,8 @@
+#include <TimerOne.h>
+
+const long nLeituras = 300;
+const long periodoAmostragemUs = 10000;
+
 void definirDirecao(bool horario) {
   digitalWrite(3, horario);
   digitalWrite(4, !horario);
@@ -17,6 +22,10 @@ int lerSaidaSistema() {
   return analogRead(A0);
 }
 
+void imprimirSaida() {
+  Serial.println(lerSaidaSistema());
+}
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(2,OUTPUT);                 // STBY TB6612
@@ -27,10 +36,12 @@ void setup() {
   digitalWrite(2,HIGH);              // Coloca o driver TB6612 em operação
   definirDirecao(true);                         // Seta direção de acordo com o valor de "dir"
   Serial.begin(115200);              // Serial initialize
+  Timer1.initialize(periodoAmostragemUs);
+  Timer1.attachInterrupt(imprimirSaida);
+  Timer1.stop();
 }
 
-const int nLeituras = 1000;
-const int periodoAmostragemUs = 1000;
+
 void loop() {
   // put your main code here, to run repeatedly:
   do {
@@ -40,10 +51,9 @@ void loop() {
   while (!estadoBotao);
 
   aplicarSinalReferencia(1.0f);
-  for (int i = 0; i < nLeituras; i++) {
-    Serial.println(lerSaidaSistema());
-    delayMicroseconds(periodoAmostragemUs);
-  }
+  Timer1.start();
+  delay(periodoAmostragemUs * nLeituras / 1000);
+  Timer1.stop();
   aplicarSinalReferencia(0.0f);
 
 }
